@@ -1,0 +1,142 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareBridge - Community</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .post-card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .post-card img { width: 40px; height: 40px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="home.html"><img src="https://via.placeholder.com/40" alt="ShareBridge Logo"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="home.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="subscription.html">Subscription</a></li>
+                    <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="community.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+                <button class="btn btn-outline-light" onclick="login()">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h2 class="text-center mb-4">Investor Community</h2>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="post-card p-4 mb-4">
+                    <h3 class="font-bold">Forum</h3>
+                    <textarea class="form-control mb-3" placeholder="Post a message..." rows="4"></textarea>
+                    <button class="btn btn-primary" onclick="postMessage()">Post</button>
+                    <h4 class="mt-3 font-semibold">Recent Posts</h4>
+                    <div class="post-card p-3 mb-2">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e" alt="User Avatar">
+                        <h5 class="font-bold">User1: Tech Innovate Earnings</h5>
+                        <p>Thoughts on Tech Innovate's latest earnings?</p>
+                        <button class="btn btn-link" onclick="likePost(1)">Like (10)</button>
+                        <button class="btn btn-link" onclick="sharePost(1)">Share</button>
+                    </div>
+                    <div class="post-card p-3 mb-2">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d" alt="User Avatar">
+                        <h5 class="font-bold">User2: Green Energy Co Outlook</h5>
+                        <p>Green Energy Co looks promising!</p>
+                        <button class="btn btn-link" onclick="likePost(2)">Like (5)</button>
+                        <button class="btn btn-link" onclick="sharePost(2)">Share</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="post-card p-4">
+                    <h3 class="font-bold">Trending Topics</h3>
+                    <ul class="list-group">
+                        <li class="list-group-item">Tech Stocks</li>
+                        <li class="list-group-item">Green Energy</li>
+                    </ul>
+                    <h3 class="mt-3 font-bold">Top Investors</h3>
+                    <ul class="list-group">
+                        <li class="list-group-item">User1</li>
+                        <li class="list-group-item">User2</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <p>&copy; 2025 ShareBridge. All rights reserved.</p>
+        <a href="contact.html" class="text-white">Contact Us</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function postMessage() {
+            const message = document.querySelector('textarea').value;
+            alert(`Posting: ${message}`);
+            // Placeholder for posting logic
+        }
+        function likePost(id) {
+            alert(`Liking post ${id}`);
+            // Placeholder for like logic
+        }
+        function sharePost(id) {
+            alert(`Sharing post ${id}`);
+            // Placeholder for share logic
+        }
+        function login() {
+            alert("Redirecting to login page...");
+            // Placeholder for login logic
+        }
+    </script>
+</body>
+</html>

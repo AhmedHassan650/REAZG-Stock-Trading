@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareBridge - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous">
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        .hero-carousel { height: 500px; position: relative; }
+        .hero-carousel .carousel-item img { object-fit: cover; height: 500px; }
+        .hero-carousel .carousel-caption { background: rgba(0, 0, 0, 0.6); border-radius: 8px; }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 500px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2), 0 0 10px rgba(0,123,255,0.3);
+        }
+        .metrics-card { background: linear-gradient(45deg, #007bff, #17a2b8); color: white; }
+        .metrics-icon { font-size: 2rem; margin-bottom: 10px; }
+        .sentiment-gauge, .forecast-chart { height: 100px; }
+        .map-container { height: 300px; border-radius: 8px; }
+        .download-btn { background-color: #17a2b8; }
+        .badge-img { width: 50px; height: 50px; }
+        .investor-badge { color: #28a745; font-weight: bold; }
+        .user-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e9ecef; }
+        .sidebar { background-color: #f8f9fa; border-left: 1px solid #dee2e6; position: sticky; top: 0; padding: 15px; }
+        .sidebar .card { margin-bottom: 15px; padding: 10px; }
+        .sidebar h4 { font-size: 1.1rem; }
+        .sidebar p { font-size: 0.9rem; }
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-content, .offcanvas { border-radius: 10px; }
+        .btn-cta {
+            background: linear-gradient(45deg, #007bff, #17a2b8);
+            color: white;
+            font-weight: bold;
+        }
+        .cta-section { background: linear-gradient(45deg, #007bff, #17a2b8); color: white; padding: 50px 0; text-align: center; }
+        .project-img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+        .news-img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
+        .carousel-control-prev, .carousel-control-next { width: 5%; }
+        .carousel-indicators { bottom: -50px; }
+        .carousel-indicators [data-bs-target] { background-color: #007bff; }
+        @media (max-width: 767px) {
+            .sidebar { display: none; }
+            .hero-carousel { height: 300px; }
+            .hero-carousel .carousel-item img { height: 300px; }
+            .video-container iframe { height: 300px; }
+            .carousel-item .row { flex-direction: column; }
+            .carousel-item .col-md-6 { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html"><img src="https://via.placeholder.com/40" alt="ShareBridge Logo"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="subscription.html">Subscription</a></li>
+                    <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+                    <li class="nav-item"><a class="nav-link" href="community.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+                <button class="btn btn-outline-light me-2" onclick="login()">Login</button>
+                <button class="btn btn-outline-light d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">Sidebar</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Carousel -->
+    <div class="container-fluid">
+        <div id="heroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3" class="d-block w-100" alt="Investment" loading="lazy">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h1 class="display-4">Welcome to ShareBridge</h1>
+                        <p class="lead">Connect with shareholders, track investments, and unlock AI-driven insights.</p>
+                        <p><strong>Your Badge:</strong> <span class="investor-badge">New Investor</span></p>
+                        <button class="btn btn-cta mt-3" data-bs-toggle="modal" data-bs-target="#joinModal">Join Now</button>
+                        <button class="btn btn-outline-light mt-3 ms-2" onclick="subscribeAlerts('Platform Updates')">Enable Platform Alerts</button>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="https://images.unsplash.com/photo-1516321310762-479e93c80212" class="d-block w-100" alt="Tech" loading="lazy">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h1 class="display-4">Invest in Innovation</h1>
+                        <p class="lead">Explore cutting-edge tech projects with ShareBridge.</p>
+                        <button class="btn btn-cta mt-3" data-bs-toggle="modal" data-bs-target="#joinModal">Join Now</button>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="https://images.unsplash.com/photo-1473283032980-f6b84a6e9c7e" class="d-block w-100" alt="Green Energy" loading="lazy">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h1 class="display-4">Sustainable Future</h1>
+                        <p class="lead">Support green energy initiatives with ShareBridge.</p>
+                        <button class="btn btn-cta mt-3" data-bs-toggle="modal" data-bs-target="#joinModal">Join Now</button>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/0MhC8vI5Z7Y" title="Saudi Vision 2030" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+                    </div>
+                    <div class="carousel-caption d-none d-md-block">
+                        <h1 class="display-4">Invest in Saudi Vision 2030</h1>
+                        <p class="lead">Powering a diversified future with NEOM, Red Sea Project, and more.</p>
+                        <p><strong>Your Badge:</strong> <span class="investor-badge">Vision 2030 Investor</span></p>
+                        <a href="projects.html#vision2030" class="btn btn-cta mt-3">Explore Vision 2030 Projects</a>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content and Sidebar -->
+    <div class="container">
+        <!-- Platform Metrics -->
+        <h2 class="text-center mb-4 fade-in">Platform Metrics</h2>
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4 fade-in">
+                <div class="card metrics-card text-center">
+                    <i class="fas fa-users metrics-icon"></i>
+                    <h4>Active Users</h4>
+                    <p><span id="activeUsers">1,250</span></p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 fade-in">
+                <div class="card metrics-card text-center">
+                    <i class="fas fa-dollar-sign metrics-icon"></i>
+                    <h4>Total Investments</h4>
+                    <p><span id="totalInvestments">$12.7M</span></p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 fade-in">
+                <div class="card metrics-card text-center">
+                    <i class="fas fa-project-diagram metrics-icon"></i>
+                    <h4>New Projects</h4>
+                    <p><span id="newProjects">5</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <h2 class="text-center mb-4 fade-in">Discover ShareBridge</h2>
+                <div class="row">
+                    <div class="col-md-4 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Real-Time Analytics</h4>
+                            <p>Track Vision 2030 projects like NEOM with AI-driven insights.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Vibrant Community</h4>
+                            <p>Join a global network supporting Saudi Arabia’s transformation.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Premium Plans</h4>
+                            <p>Unlock exclusive Vision 2030 investment opportunities.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Featured Project</h2>
+                <div id="featuredProjectCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card p-4">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" class="project-img" alt="Red Sea Project" loading="lazy">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <h4>Red Sea Project</h4>
+                                                <p>A luxury tourism destination powered by renewable energy, part of Saudi Vision 2030.</p>
+                                                <a href="projects.html#redsea" class="btn btn-cta">Explore Project</a>
+                                                <a href="https://www.redseaglobal.com" class="btn btn-outline-primary mt-2">Watch Red Sea Project Video</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card p-4">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <img src="https://images.unsplash.com/photo-1621881538090-c0b6c74e8f3e" class="project-img" alt="NEOM" loading="lazy">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <h4>NEOM</h4>
+                                                <p>A futuristic smart city driving innovation for Saudi Vision 2030.</p>
+                                                <a href="projects.html#neom" class="btn btn-cta">Explore Project</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card p-4">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4" class="project-img" alt="Al-Qidiya" loading="lazy">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <h4>Al-Qidiya</h4>
+                                                <p>An entertainment and cultural hub for Saudi Vision 2030’s vibrant society.</p>
+                                                <a href="projects.html#alqidiya" class="btn btn-cta">Explore Project</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#featuredProjectCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#featuredProjectCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                    <div class="carousel-indicators">
+                        <button type="button" data-bs-target="#featuredProjectCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                        <button type="button" data-bs-target="#featuredProjectCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                        <button type="button" data-bs-target="#featuredProjectCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    </div>
+                </div>
+
+                <div class="cta-section mb-5 fade-in">
+                    <h2>Join the ShareBridge Community</h2>
+                    <p>Start investing smarter and connect with a global network of shareholders today!</p>
+                    <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#joinModal">Get Started Now</button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-3 d-none d-md-block sidebar">
+                <h2 class="text-center mb-4 fade-in">AI-Driven Forecast</h2>
+                <div class="card fade-in">
+                    <h4>Market Prediction</h4>
+                    <p>AI predicts 7% growth for NEOM shares in Q4 2025. Powered by Saudi Vision 2030.</p>
+                    <div class="forecast-chart">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                    <button class="btn download-btn text-white mt-2" onclick="downloadForecastData()">Export Forecast as CSV</button>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Market Insights</h2>
+                <div class="card fade-in">
+                    <h4>Community Sentiment</h4>
+                    <div class="sentiment-gauge">
+                        <canvas id="sentimentGauge"></canvas>
+                    </div>
+                    <table class="table table-striped mt-3">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Sentiment</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>NEOM Smart City Launch</td>
+                                <td>Positive (85%)</td>
+                                <td>2025-08-06</td>
+                            </tr>
+                            <tr>
+                                <td>Red Sea Project Funding</td>
+                                <td>Positive (80%)</td>
+                                <td>2025-08-05</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="btn download-btn text-white mt-2" onclick="downloadInsightsData()">Export Insights as CSV</button>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Investment Highlights</h2>
+                <div class="card fade-in">
+                    <h4>Investment Distribution</h4>
+                    <table class="table table-striped mt-3">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Share Value</th>
+                                <th>ROI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>NEOM</td>
+                                <td>$200.50</td>
+                                <td>7.0%</td>
+                            </tr>
+                            <tr>
+                                <td>Red Sea Project</td>
+                                <td>$120.75</td>
+                                <td>4.5%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="btn download-btn text-white mt-2" onclick="downloadInvestmentData()">Export Investments as CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- News Feed -->
+        <h2 class="text-center mb-4 fade-in">News Feed</h2>
+        <div id="newsCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <img src="https://images.unsplash.com/photo-1621881538090-c0b6c74e8f3e" class="news-img mb-3" alt="NEOM News" loading="lazy">
+                                <h4>NEOM Advances Smart City Development</h4>
+                                <p>NEOM secures $10B in investments, driving Saudi Vision 2030’s thriving economy.</p>
+                                <a href="news.html#vision2030" class="btn btn-outline-primary btn-sm">Read More</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" class="news-img mb-3" alt="Red Sea News" loading="lazy">
+                                <h4>Red Sea Project Expands Resorts</h4>
+                                <p>Red Sea Project announces new eco-friendly resorts, boosting tourism for Vision 2030.</p>
+                                <a href="news.html#redsea" class="btn btn-outline-primary btn-sm">Read More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4" class="news-img mb-3" alt="Al-Qidiya News" loading="lazy">
+                                <h4>Al-Qidiya Cultural Hub Opens</h4>
+                                <p>Al-Qidiya launches entertainment complex, supporting Vision 2030’s vibrant society.</p>
+                                <a href="news.html#alqidiya" class="btn btn-outline-primary btn-sm">Read More</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <img src="https://images.unsplash.com/photo-1473283032980-f6b84a6e9c7e" class="news-img mb-3" alt="Green Energy News" loading="lazy">
+                                <h4>Green Energy Co Secures Funding</h4>
+                                <p>Green Energy Co received $50M to expand renewable energy projects globally.</p>
+                                <a href="news.html#greenenergy" class="btn btn-outline-primary btn-sm">Read More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#newsCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#newsCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#newsCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#newsCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            </div>
+        </div>
+
+        <!-- Community Highlights -->
+        <h2 class="text-center mb-4 fade-in">Community Highlights</h2>
+        <div id="communityCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User1" alt="User1" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User1</h5>
+                                        <span class="investor-badge">Vision 2030 Investor</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">Sentiment: Positive (90%)</p>
+                                <p class="mb-0">Excited for NEOM’s sustainable future! #Vision2030</p>
+                                <p class="mb-0"><small>Like (15) | <a href="#" onclick="sharePost('NEOM Post')">Share</a></small></p>
+                                <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User2" alt="User2" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User2</h5>
+                                        <span class="investor-badge">Top Investor</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">Sentiment: Positive (85%)</p>
+                                <p class="mb-0">Red Sea Project is a game-changer for tourism! #Vision2030</p>
+                                <p class="mb-0"><small>Like (10) | <a href="#" onclick="sharePost('Red Sea Post')">Share</a></small></p>
+                                <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User3" alt="User3" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User3</h5>
+                                        <span class="investor-badge">Market Guru</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">Sentiment: Positive (80%)</p>
+                                <p class="mb-0">Al-Qidiya will redefine entertainment! #Vision2030</p>
+                                <p class="mb-0"><small>Like (8) | <a href="#" onclick="sharePost('Al-Qidiya Post')">Share</a></small></p>
+                                <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User4" alt="User4" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User4</h5>
+                                        <span class="investor-badge">New Investor</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">Sentiment: Neutral (60%)</p>
+                                <p class="mb-0">Exploring Vision 2030 opportunities on ShareBridge...</p>
+                                <p class="mb-0"><small>Like (5) | <a href="#" onclick="sharePost('Vision 2030 Exploration')">Share</a></small></p>
+                                <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#communityCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#communityCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#communityCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#communityCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            </div>
+        </div>
+
+        <!-- Testimonials -->
+        <h2 class="text-center mb-4 fade-in">Testimonials</h2>
+        <div id="testimonialsCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User1" alt="User1" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User1</h5>
+                                        <span class="investor-badge">Vision 2030 Investor</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">"Investing in Vision 2030 projects via ShareBridge has been a game-changer!"</p>
+                                <a href="testimonials.html" class="btn btn-outline-primary btn-sm mt-2">View More</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User2" alt="User2" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User2</h5>
+                                        <span class="investor-badge">Top Investor</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">"ShareBridge’s insights on NEOM helped me make informed decisions."</p>
+                                <a href="testimonials.html" class="btn btn-outline-primary btn-sm mt-2">View More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User3" alt="User3" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User3</h5>
+                                        <span class="investor-badge">Market Guru</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">"The Red Sea Project investment opportunities on ShareBridge are unmatched!"</p>
+                                <a href="testimonials.html" class="btn btn-outline-primary btn-sm mt-2">View More</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card p-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="https://via.placeholder.com/40?text=User4" alt="User4" class="user-img me-2">
+                                    <div>
+                                        <h5 class="mb-0">User4</h5>
+                                        <span class="investor-badge">New Investor</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0">"ShareBridge’s community forums connected me to Vision 2030 enthusiasts."</p>
+                                <a href="testimonials.html" class="btn btn-outline-primary btn-sm mt-2">View More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            </div>
+        </div>
+
+        <!-- Project Locations -->
+        <h2 class="text-center mb-4 fade-in">Project Locations</h2>
+        <div class="row mb-5">
+            <div class="col-md-12 mb-4 fade-in">
+                <div class="card p-4">
+                    <h4>Saudi Vision 2030 Projects Worldwide</h4>
+                    <div id="projectMap" class="map-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offcanvas Sidebar for Mobile -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Sidebar</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <h2 class="text-center mb-4">AI-Driven Forecast</h2>
+            <div class="card mb-3">
+                <h4>Market Prediction</h4>
+                <p>AI predicts 7% growth for NEOM shares in Q4 2025. Powered by Saudi Vision 2030.</p>
+                <div class="forecast-chart">
+                    <canvas id="forecastChartMobile"></canvas>
+                </div>
+                <button class="btn download-btn text-white mt-2" onclick="downloadForecastData()">Export Forecast as CSV</button>
+            </div>
+
+            <h2 class="text-center mb-4">Market Insights</h2>
+            <div class="card mb-3">
+                <h4>Community Sentiment</h4>
+                <div class="sentiment-gauge">
+                    <canvas id="sentimentGaugeMobile"></canvas>
+                </div>
+                <table class="table table-striped mt-3">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Sentiment</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>NEOM Smart City Launch</td>
+                            <td>Positive (85%)</td>
+                            <td>2025-08-06</td>
+                        </tr>
+                        <tr>
+                            <td>Red Sea Project Funding</td>
+                            <td>Positive (80%)</td>
+                            <td>2025-08-05</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn download-btn text-white mt-2" onclick="downloadInsightsData()">Export Insights as CSV</button>
+            </div>
+
+            <h2 class="text-center mb-4">Investment Highlights</h2>
+            <div class="card mb-3">
+                <h4>Investment Distribution</h4>
+                <table class="table table-striped mt-3">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Share Value</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>NEOM</td>
+                            <td>$200.50</td>
+                            <td>7.0%</td>
+                        </tr>
+                        <tr>
+                            <td>Red Sea Project</td>
+                            <td>$120.75</td>
+                            <td>4.5%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn download-btn text-white mt-2" onclick="downloadInvestmentData()">Export Investments as CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Modal -->
+    <div class="modal fade" id="joinModal" tabindex="-1" aria-labelledby="joinModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="joinModalLabel">Join ShareBridge</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Sign up today to access exclusive investor tools and join our vibrant community!</p>
+                    <button class="btn btn-cta" onclick="window.location.href='subscription.html'">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <p><img src="https://via.placeholder.com/50?text=SEC" alt="SEC Compliance" class="badge-img" title="SEC Compliant"> &copy; 2025 ShareBridge. All rights reserved.</p>
+        <a href="contact.html" class="text-white">Contact Us</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded. Charts will not be initialized.');
+                return;
+            }
+
+            // Mock data
+            const forecastData = [
+                { date: '2025-07-01', value: 195.00 },
+                { date: '2025-08-01', value: 200.50 },
+                { date: '2025-09-01', value: 205.00 }
+            ];
+            const insightsData = [
+                { title: 'NEOM Smart City Launch', sentiment: 85, date: '2025-08-06' },
+                { title: 'Red Sea Project Funding', sentiment: 80, date: '2025-08-05' }
+            ];
+            const investmentData = {
+                projects: [
+                    { name: 'NEOM', shareValue: 200.50, roi: 7.0 },
+                    { name: 'Red Sea Project', shareValue: 120.75, roi: 4.5 }
+                ]
+            };
+
+            // AI-Driven Forecast Chart (Desktop)
+            const forecastChartCanvas = document.getElementById('forecastChart');
+            if (forecastChartCanvas) {
+                const ctx = forecastChartCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: forecastData.map(d => d.date),
+                                datasets: [{
+                                    label: 'NEOM Share Value',
+                                    data: forecastData.map(d => d.value),
+                                    borderColor: '#28a745',
+                                    fill: false
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: true },
+                                    y: { beginAtZero: false }
+                                }
+                            }
+                        });
+                        console.log('Forecast chart initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize forecast chart:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for forecastChart');
+                }
+            } else {
+                console.error('Canvas with ID forecastChart not found');
+            }
+
+            // AI-Driven Forecast Chart (Mobile)
+            const forecastChartMobileCanvas = document.getElementById('forecastChartMobile');
+            if (forecastChartMobileCanvas) {
+                const ctx = forecastChartMobileCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: forecastData.map(d => d.date),
+                                datasets: [{
+                                    label: 'NEOM Share Value',
+                                    data: forecastData.map(d => d.value),
+                                    borderColor: '#28a745',
+                                    fill: false
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: true },
+                                    y: { beginAtZero: false }
+                                }
+                            }
+                        });
+                        console.log('Mobile forecast chart initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize mobile forecast chart:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for forecastChartMobile');
+                }
+            } else {
+                console.error('Canvas with ID forecastChartMobile not found');
+            }
+
+            // Sentiment Gauge (Desktop)
+            const sentimentGaugeCanvas = document.getElementById('sentimentGauge');
+            if (sentimentGaugeCanvas) {
+                const ctx = sentimentGaugeCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Bullish', 'Neutral'],
+                                datasets: [{ data: [85, 15], backgroundColor: ['#28a745', '#6c757d'] }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                        });
+                        console.log('Sentiment gauge initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize sentiment gauge:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for sentimentGauge');
+                }
+            } else {
+                console.error('Canvas with ID sentimentGauge not found');
+            }
+
+            // Sentiment Gauge (Mobile)
+            const sentimentGaugeMobileCanvas = document.getElementById('sentimentGaugeMobile');
+            if (sentimentGaugeMobileCanvas) {
+                const ctx = sentimentGaugeMobileCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Bullish', 'Neutral'],
+                                datasets: [{ data: [85, 15], backgroundColor: ['#28a745', '#6c757d'] }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                        });
+                        console.log('Mobile sentiment gauge initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize mobile sentiment gauge:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for sentimentGaugeMobile');
+                }
+            } else {
+                console.error('Canvas with ID sentimentGaugeMobile not found');
+            }
+
+            // Map Initialization
+            const mapContainer = document.getElementById('projectMap');
+            if (mapContainer) {
+                try {
+                    const map = L.map('projectMap').setView([24.7136, 46.6753], 5);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map);
+                    const projects = [
+                        { name: 'NEOM', location: [28.1167, 35.0167], details: 'Futuristic Smart City' },
+                        { name: 'Red Sea Project', location: [24.9333, 36.5833], details: 'Luxury Tourism Hub' },
+                        { name: 'Al-Qidiya', location: [24.5718, 46.3512], details: 'Entertainment Complex' }
+                    ];
+                    projects.forEach(p => {
+                        L.marker(p.location).addTo(map)
+                            .bindPopup(`<b>${p.name}</b><br>${p.details}<br><a href="projects.html#${p.name.toLowerCase().replace(' ', '')}" aria-label="${p.name} marker">View Project</a>`)
+                            .openPopup();
+                    });
+                    console.log('Map initialized');
+                } catch (e) {
+                    console.error('Failed to initialize map:', e);
+                }
+            } else {
+                console.error('Map container with ID projectMap not found');
+            }
+
+            // Live Metrics Simulation
+            function updateMetrics() {
+                const activeUsers = document.getElementById('activeUsers');
+                const totalInvestments = document.getElementById('totalInvestments');
+                const newProjects = document.getElementById('newProjects');
+                if (activeUsers && totalInvestments && newProjects) {
+                    activeUsers.textContent = (parseInt(activeUsers.textContent.replace(',', '')) + Math.floor(Math.random() * 10)).toLocaleString();
+                    totalInvestments.textContent = `$${(parseFloat(totalInvestments.textContent.replace('$', '').replace('M', '')) + 0.1).toFixed(1)}M`;
+                    newProjects.textContent = parseInt(newProjects.textContent) + Math.floor(Math.random() * 2);
+                }
+            }
+            setInterval(updateMetrics, 5000); // Simulate WebSocket updates every 5s
+
+            // Alerts
+            window.subscribeAlerts = function(type) {
+                alert(`Subscribed to ${type} alerts`);
+                // Placeholder for WebSocket/email alert subscription (e.g., /api/alerts/subscribe/platform)
+            };
+
+            // Social Interaction
+            window.sharePost = function(title) {
+                alert(`Sharing post: ${title}`);
+                // Placeholder for sharing logic (e.g., /api/community/share)
+            };
+
+            // Export Forecast Data
+            window.downloadForecastData = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum
+                if (!isPremium) {
+                    alert('CSV export is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const csvContent = [
+                    'Date,Share Value',
+                    ...forecastData.map(d => `${d.date},${d.value}`)
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Forecast_Data.csv';
+                link.click();
+            };
+
+            // Export Insights Data
+            window.downloadInsightsData = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum
+                if (!isPremium) {
+                    alert('CSV export is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const csvContent = [
+                    'Title,Sentiment,Date',
+                    ...insightsData.map(d => `${d.title},${d.sentiment}%,${d.date}`)
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Insights_Data.csv';
+                link.click();
+            };
+
+            // Export Investment Data
+            window.downloadInvestmentData = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum
+                if (!isPremium) {
+                    alert('CSV export is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const csvContent = [
+                    'Project,Share Value,ROI',
+                    ...investmentData.projects.map(p => `${p.name},${p.shareValue},${p.roi}%`)
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Investment_Data.csv';
+                link.click();
+            };
+
+            window.login = function() {
+                alert("Redirecting to login page...");
+                // Placeholder for login logic (e.g., /api/auth/login)
+            };
+
+            // Trigger fade-in animations
+            document.querySelectorAll('.fade-in').forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>

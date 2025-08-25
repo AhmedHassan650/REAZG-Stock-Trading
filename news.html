@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareBridge - News</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous">
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2), 0 0 10px rgba(0,123,255,0.3);
+        }
+        .chart-container { height: 250px; }
+        .sentiment-gauge { height: 100px; }
+        .map-container { height: 300px; border-radius: 8px; }
+        .download-btn { background-color: #17a2b8; }
+        .timeframe-btn.active { background-color: #007bff; color: white; }
+        .badge-img { width: 50px; height: 50px; }
+        .investor-badge { color: #28a745; font-weight: bold; }
+        .user-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e9ecef; }
+        .sidebar { background-color: #f8f9fa; border-left: 1px solid #dee2e6; position: sticky; top: 0; padding: 15px; }
+        .sidebar .card { margin-bottom: 15px; padding: 10px; }
+        .sidebar h4 { font-size: 1.1rem; }
+        .sidebar p { font-size: 0.9rem; }
+        .metrics-card { background: linear-gradient(45deg, #007bff, #17a2b8); color: white; }
+        .metrics-icon { font-size: 2rem; margin-bottom: 10px; }
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-content, .offcanvas { border-radius: 10px; }
+        .btn-cta { background: linear-gradient(45deg, #007bff, #17a2b8); color: white; font-weight: bold; }
+        .news-img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
+        @media (max-width: 767px) {
+            .sidebar { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="home.html"><img src="https://via.placeholder.com/40" alt="ShareBridge Logo"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="home.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="subscription.html">Subscription</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="news.html">News</a></li>
+                    <li class="nav-item"><a class="nav-link" href="community.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+                <button class="btn btn-outline-light me-2" onclick="login()">Login</button>
+                <button class="btn btn-outline-light d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">Sidebar</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content and Sidebar -->
+    <div class="container">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <h2 class="text-center mb-4 fade-in">Platform Metrics</h2>
+                <div class="row mb-5">
+                    <div class="col-md-4 mb-4 fade-in">
+                        <div class="card metrics-card text-center">
+                            <i class="fas fa-users metrics-icon"></i>
+                            <h4>Active Users</h4>
+                            <p><span id="activeUsers">1,250</span></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4 fade-in">
+                        <div class="card metrics-card text-center">
+                            <i class="fas fa-dollar-sign metrics-icon"></i>
+                            <h4>Total Investments</h4>
+                            <p><span id="totalInvestments">$12.7M</span></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4 fade-in">
+                        <div class="card metrics-card text-center">
+                            <i class="fas fa-project-diagram metrics-icon"></i>
+                            <h4>New Projects</h4>
+                            <p><span id="newProjects">5</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Featured Project: Tech Innovate</h2>
+                <div class="row mb-5">
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>AI-Driven Forecast</h4>
+                            <div class="d-flex gap-2 mb-2">
+                                <button class="btn btn-outline-primary timeframe-btn active" onclick="updateForecastChart('30Day')">30 Days</button>
+                                <button class="btn btn-outline-primary timeframe-btn" onclick="updateForecastChart('6Month')">6 Months</button>
+                                <button class="btn btn-outline-primary timeframe-btn" onclick="updateForecastChart('1Year')">1 Year</button>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="forecastChart"></canvas>
+                            </div>
+                            <button class="btn download-btn text-white mt-2" onclick="downloadProjectData()">Export Data as CSV</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Portfolio Simulator (Premium)</h4>
+                            <input type="number" id="investmentAmount" class="form-control mb-2" placeholder="Enter investment amount ($)" min="0">
+                            <select id="timeframeSimulator" class="form-select mb-2">
+                                <option value="30Day">30 Days</option>
+                                <option value="6Month">6 Months</option>
+                                <option value="1Year">1 Year</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="simulateInvestment()">Simulate Returns</button>
+                            <p id="simulationResult" class="mt-2">Enter amount to see projected returns.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Personalized Recommendations</h2>
+                <div class="row mb-5">
+                    <div class="col-md-12 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Projects for You</h4>
+                            <div class="chart-container">
+                                <canvas id="recommendationsChart"></canvas>
+                            </div>
+                            <table class="table table-striped mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Category</th>
+                                        <th>Expected ROI</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Tech Innovate</td>
+                                        <td>Technology</td>
+                                        <td>8.5%</td>
+                                        <td><a href="projects.html" class="btn btn-outline-primary btn-sm">View Project</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Green Energy Co</td>
+                                        <td>Renewable Energy</td>
+                                        <td>6.2%</td>
+                                        <td><a href="projects.html" class="btn btn-outline-primary btn-sm">View Project</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn download-btn text-white mt-2" onclick="downloadRecommendationsData()">Export Recommendations as CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Market Insights</h2>
+                <div class="row mb-5">
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Community Sentiment</h4>
+                            <div class="sentiment-gauge">
+                                <canvas id="sentimentGauge"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Recent Insights</h4>
+                            <div class="chart-container">
+                                <canvas id="insightsChart"></canvas>
+                            </div>
+                            <table class="table table-striped mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Sentiment</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Tech Innovate New Product</td>
+                                        <td>Positive (80%)</td>
+                                        <td>2025-08-06</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Green Energy Contract</td>
+                                        <td>Positive (75%)</td>
+                                        <td>2025-08-05</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn download-btn text-white mt-2" onclick="downloadInsightsData()">Export Insights as CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Project Locations</h2>
+                <div class="row mb-5">
+                    <div class="col-md-12 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Global Projects</h4>
+                            <div id="projectMap" class="map-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">Investment Highlights</h2>
+                <div class="row mb-5">
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>Investment Distribution</h4>
+                            <div class="chart-container">
+                                <canvas id="investmentPieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <h4>ROI Trends</h4>
+                            <div class="d-flex gap-2 mb-2">
+                                <button class="btn btn-outline-primary timeframe-btn active" onclick="updateRoiChart('30Day')">30 Days</button>
+                                <button class="btn btn-outline-primary timeframe-btn" onclick="updateRoiChart('6Month')">6 Months</button>
+                                <button class="btn btn-outline-primary timeframe-btn" onclick="updateRoiChart('1Year')">1 Year</button>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="roiChart"></canvas>
+                            </div>
+                            <button class="btn download-btn text-white mt-2" onclick="downloadInvestmentData()">Export Investments as CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-center mb-4 fade-in">News Feed</h2>
+                <div class="row mb-5">
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <img src="https://images.unsplash.com/photo-1516321310762-479e93c80212" class="news-img mb-3" alt="Tech Innovate News">
+                            <h4>Tech Innovate Launches New Product</h4>
+                            <p>Tech Innovate unveiled a groundbreaking AI solution, boosting market confidence.</p>
+                            <a href="#" class="btn btn-outline-primary btn-sm">Read More</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4 fade-in">
+                        <div class="card p-4">
+                            <img src="https://images.unsplash.com/photo-1473283032980-f6b84a6e9c7e" class="news-img mb-3" alt="Green Energy News">
+                            <h4>Green Energy Co Secures Funding</h4>
+                            <p>Green Energy Co received $50M to expand renewable energy projects globally.</p>
+                            <a href="#" class="btn btn-outline-primary btn-sm">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-3 d-none d-md-block sidebar">
+                <h2 class="text-center mb-4 fade-in">Community Highlights</h2>
+                <div class="card fade-in">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="https://via.placeholder.com/40?text=User1" alt="User1" class="user-img me-2">
+                        <div>
+                            <h5 class="mb-0">User1</h5>
+                            <span class="investor-badge">Top Investor</span>
+                        </div>
+                    </div>
+                    <p class="mb-0">Sentiment: Positive (85%)</p>
+                    <p class="mb-0">Tech Innovate's latest earnings...</p>
+                    <p class="mb-0"><small>Like (10) | <a href="#" onclick="sharePost('Tech Innovate Earnings')">Share</a></small></p>
+                    <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+                </div>
+                <div class="card fade-in">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="https://via.placeholder.com/40?text=User2" alt="User2" class="user-img me-2">
+                        <div>
+                            <h5 class="mb-0">User2</h5>
+                            <span class="investor-badge">Market Guru</span>
+                        </div>
+                    </div>
+                    <p class="mb-0">Sentiment: Neutral (60%)</p>
+                    <p class="mb-0">Green Energy Co looks promising...</p>
+                    <p class="mb-0"><small>Like (5) | <a href="#" onclick="sharePost('Green Energy Co Outlook')">Share</a></small></p>
+                    <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offcanvas Sidebar for Mobile -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Sidebar</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <h2 class="text-center mb-4">Community Highlights</h2>
+            <div class="card mb-3">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="https://via.placeholder.com/40?text=User1" alt="User1" class="user-img me-2">
+                    <div>
+                        <h5 class="mb-0">User1</h5>
+                        <span class="investor-badge">Top Investor</span>
+                    </div>
+                </div>
+                <p class="mb-0">Sentiment: Positive (85%)</p>
+                <p class="mb-0">Tech Innovate's latest earnings...</p>
+                <p class="mb-0"><small>Like (10) | <a href="#" onclick="sharePost('Tech Innovate Earnings')">Share</a></small></p>
+                <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+            </div>
+            <div class="card mb-3">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="https://via.placeholder.com/40?text=User2" alt="User2" class="user-img me-2">
+                    <div>
+                        <h5 class="mb-0">User2</h5>
+                        <span class="investor-badge">Market Guru</span>
+                    </div>
+                </div>
+                <p class="mb-0">Sentiment: Neutral (60%)</p>
+                <p class="mb-0">Green Energy Co looks promising...</p>
+                <p class="mb-0"><small>Like (5) | <a href="#" onclick="sharePost('Green Energy Co Outlook')">Share</a></small></p>
+                <a href="community.html" class="btn btn-outline-primary btn-sm mt-2">View Community</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <p><img src="https://via.placeholder.com/50?text=SEC" alt="SEC Compliance" class="badge-img" title="SEC Compliant"> &copy; 2025 ShareBridge. All rights reserved.</p>
+        <a href="contact.html" class="text-white">Contact Us</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded. Charts will not be initialized.');
+                return;
+            }
+
+            // Register Chart.js Zoom Plugin
+            try {
+                Chart.register(ChartZoom);
+                console.log('Chart.js Zoom Plugin registered');
+            } catch (e) {
+                console.error('Failed to register Chart.js Zoom Plugin:', e);
+            }
+
+            // Mock data
+            const featuredProject = {
+                name: 'Tech Innovate',
+                shareValue: 150.25,
+                forecast: {
+                    '30Day': [150.25, 152.50, 154.75, 155.50],
+                    '6Month': [150.25, 155.00, 160.00, 165.75],
+                    '1Year': [150.25, 160.00, 170.00, 180.00]
+                }
+            };
+
+            const recommendationsData = [
+                { project: 'Tech Innovate', category: 'Technology', roi: 8.5 },
+                { project: 'Green Energy Co', category: 'Renewable Energy', roi: 6.2 }
+            ];
+
+            const insightsData = [
+                { title: 'Tech Innovate New Product', sentiment: 80, date: '2025-08-06' },
+                { title: 'Green Energy Contract', sentiment: 75, date: '2025-08-05' }
+            ];
+
+            const investmentData = {
+                projects: [
+                    { name: 'Tech Innovate', shareValue: 150.25, roi: 5.2 },
+                    { name: 'Green Energy Co', shareValue: 85.50, roi: 2.1 }
+                ],
+                roiTrends: {
+                    '30Day': [
+                        { name: 'Tech Innovate', data: [4.0, 4.5, 5.0, 5.2] },
+                        { name: 'Green Energy Co', data: [1.5, 1.8, 2.0, 2.1] }
+                    ],
+                    '6Month': [
+                        { name: 'Tech Innovate', data: [3.5, 4.0, 4.8, 5.5] },
+                        { name: 'Green Energy Co', data: [1.0, 1.5, 1.9, 2.3] }
+                    ],
+                    '1Year': [
+                        { name: 'Tech Innovate', data: [3.0, 4.0, 5.0, 6.0] },
+                        { name: 'Green Energy Co', data: [0.8, 1.2, 1.8, 2.5] }
+                    ]
+                }
+            };
+
+            // Forecast Chart
+            let forecastChartInstance = null;
+            const forecastChartCanvas = document.getElementById('forecastChart');
+            if (forecastChartCanvas) {
+                const ctx = forecastChartCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        forecastChartInstance = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                                datasets: [{
+                                    label: 'Tech Innovate Forecast',
+                                    data: featuredProject.forecast['30Day'],
+                                    borderColor: '#007bff',
+                                    fill: false
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' } } }
+                            }
+                        });
+                        console.log('Forecast chart initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize forecast chart:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for forecastChart');
+                }
+            } else {
+                console.error('Canvas with ID forecastChart not found');
+            }
+
+            // Sentiment Gauge
+            const sentimentGaugeCanvas = document.getElementById('sentimentGauge');
+            if (sentimentGaugeCanvas) {
+                const ctx = sentimentGaugeCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Bullish', 'Neutral'],
+                                datasets: [{ data: [80, 20], backgroundColor: ['#28a745', '#6c757d'] }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                        });
+                        console.log('Sentiment gauge initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize sentiment gauge:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for sentimentGauge');
+                }
+            } else {
+                console.error('Canvas with ID sentimentGauge not found');
+            }
+
+            // Recommendations Chart
+            const recommendationsChartCanvas = document.getElementById('recommendationsChart');
+            if (recommendationsChartCanvas) {
+                const ctx = recommendationsChartCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: recommendationsData.map(d => d.project),
+                                datasets: [{
+                                    label: 'Expected ROI (%)',
+                                    data: recommendationsData.map(d => d.roi),
+                                    backgroundColor: ['#007bff', '#28a745'],
+                                    borderColor: ['#0056b3', '#1e7e34'],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: { y: { beginAtZero: true, max: 10 } }
+                            }
+                        });
+                        console.log('Recommendations chart initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize recommendations chart:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for recommendationsChart');
+                }
+            } else {
+                console.error('Canvas with ID recommendationsChart not found');
+            }
+
+            // Insights Chart
+            const insightsChartCanvas = document.getElementById('insightsChart');
+            if (insightsChartCanvas) {
+                const ctx = insightsChartCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: insightsData.map(d => d.title.substring(0, 15) + (d.title.length > 15 ? '...' : '')),
+                                datasets: [{
+                                    label: 'Sentiment Score (%)',
+                                    data: insightsData.map(d => d.sentiment),
+                                    backgroundColor: ['#28a745', '#28a745'],
+                                    borderColor: ['#1e7e34', '#1e7e34'],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: { y: { beginAtZero: true, max: 100 } }
+                            }
+                        });
+                        console.log('Insights chart initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize insights chart:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for insightsChart');
+                }
+            } else {
+                console.error('Canvas with ID insightsChart not found');
+            }
+
+            // Investment Pie Chart
+            const investmentPieChartCanvas = document.getElementById('investmentPieChart');
+            if (investmentPieChartCanvas) {
+                const ctx = investmentPieChartCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: investmentData.projects.map(p => p.name),
+                                datasets: [{
+                                    label: 'Share Value ($)',
+                                    data: investmentData.projects.map(p => p.shareValue),
+                                    backgroundColor: ['#007bff', '#28a745'],
+                                    borderColor: ['#0056b3', '#1e7e34'],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                        console.log('Investment pie chart initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize investment pie chart:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for investmentPieChart');
+                }
+            } else {
+                console.error('Canvas with ID investmentPieChart not found');
+            }
+
+            // ROI Trends Chart
+            let roiChartInstance = null;
+            const roiChartCanvas = document.getElementById('roiChart');
+            if (roiChartCanvas) {
+                const ctx = roiChartCanvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        roiChartInstance = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                                datasets: investmentData.roiTrends['30Day'].map(project => ({
+                                    label: project.name,
+                                    data: project.data,
+                                    borderColor: project.name === 'Tech Innovate' ? '#007bff' : '#28a745',
+                                    fill: false
+                                }))
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' } } }
+                            }
+                        });
+                        console.log('ROI trends chart initialized');
+                    } catch (e) {
+                        console.error('Failed to initialize ROI trends chart:', e);
+                    }
+                } else {
+                    console.error('Failed to get 2D context for roiChart');
+                }
+            } else {
+                console.error('Canvas with ID roiChart not found');
+            }
+
+            // Timeframe Selector for Forecast
+            window.updateForecastChart = function(timeframe) {
+                const buttons = document.querySelectorAll('.timeframe-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                const labels = {
+                    '30Day': ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                    '6Month': ['Today', 'Month 2', 'Month 4', 'Month 6'],
+                    '1Year': ['Today', 'Month 4', 'Month 8', 'Month 12']
+                };
+
+                if (forecastChartInstance) {
+                    forecastChartInstance.data.labels = labels[timeframe];
+                    forecastChartInstance.data.datasets[0].data = featuredProject.forecast[timeframe];
+                    forecastChartInstance.update();
+                    console.log(`Updated forecast chart to ${timeframe}`);
+                }
+            };
+
+            // Timeframe Selector for ROI Trends
+            window.updateRoiChart = function(timeframe) {
+                const buttons = document.querySelectorAll('.timeframe-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                const labels = {
+                    '30Day': ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                    '6Month': ['Today', 'Month 2', 'Month 4', 'Month 6'],
+                    '1Year': ['Today', 'Month 4', 'Month 8', 'Month 12']
+                };
+
+                if (roiChartInstance) {
+                    roiChartInstance.data.labels = labels[timeframe];
+                    roiChartInstance.data.datasets = investmentData.roiTrends[timeframe].map(project => ({
+                        label: project.name,
+                        data: project.data,
+                        borderColor: project.name === 'Tech Innovate' ? '#007bff' : '#28a745',
+                        fill: false
+                    }));
+                    roiChartInstance.update();
+                    console.log(`Updated ROI chart to ${timeframe}`);
+                }
+            };
+
+            // Portfolio Simulator
+            window.simulateInvestment = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum via /api/user/status
+                if (!isPremium) {
+                    alert('Portfolio Simulator is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const amount = parseFloat(document.getElementById('investmentAmount').value);
+                const timeframe = document.getElementById('timeframeSimulator').value;
+                if (isNaN(amount) || amount <= 0) {
+                    document.getElementById('simulationResult').textContent = 'Please enter a valid investment amount.';
+                    return;
+                }
+                const currentPrice = featuredProject.shareValue;
+                const futurePrice = featuredProject.forecast[timeframe][featuredProject.forecast[timeframe].length - 1];
+                const shares = amount / currentPrice;
+                const projectedValue = shares * futurePrice;
+                const roi = ((projectedValue - amount) / amount * 100).toFixed(2);
+                document.getElementById('simulationResult').textContent = `Projected Value: $${projectedValue.toFixed(2)} (ROI: ${roi}%)`;
+            };
+
+            // Alerts
+            window.subscribeAlerts = function(type) {
+                alert(`Subscribed to ${type} alerts`);
+                // Placeholder for WebSocket/email alert subscription (e.g., /api/alerts/subscribe/platform)
+            };
+
+            // Social Interaction
+            window.sharePost = function(title) {
+                alert(`Sharing post: ${title}`);
+                // Placeholder for sharing logic (e.g., /api/community/share)
+            };
+
+            // Export Project Data
+            window.downloadProjectData = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum
+                if (!isPremium) {
+                    alert('CSV export is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const data = [
+                    { project: 'Tech Innovate', shareValue: 150.25, forecast30Day: 155.50, forecast6Month: 165.75, forecast1Year: 180.00 }
+                ];
+                const csvContent = [
+                    'Project,Share Value,30-Day Forecast,6-Month Forecast,1-Year Forecast',
+                    ...data.map(d => `${d.project},${d.shareValue},${d.forecast30Day},${d.forecast6Month},${d.forecast1Year}`)
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Tech_Innovate_Data.csv';
+                link.click();
+            };
+
+            // Export Recommendations Data
+            window.downloadRecommendationsData = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum
+                if (!isPremium) {
+                    alert('CSV export is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const csvContent = [
+                    'Project,Category,Expected ROI',
+                    ...recommendationsData.map(d => `${d.project},${d.category},${d.roi}%`)
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Recommendations_Data.csv';
+                link.click();
+            };
+
+            // Export Insights Data
+            window.downloadInsightsData = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum
+                if (!isPremium) {
+                    alert('CSV export is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const csvContent = [
+                    'Title,Sentiment,Date',
+                    ...insightsData.map(d => `${d.title},${d.sentiment}%,${d.date}`)
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Insights_Data.csv';
+                link.click();
+            };
+
+            // Export Investment Data
+            window.downloadInvestmentData = function() {
+                const isPremium = false; // Mock: Check if user is VIP/Platinum
+                if (!isPremium) {
+                    alert('CSV export is available for VIP/Platinum users only. Please upgrade.');
+                    return;
+                }
+                const csvContent = [
+                    'Project,Share Value,ROI',
+                    ...investmentData.projects.map(p => `${p.name},${p.shareValue},${p.roi}%`)
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Investment_Data.csv';
+                link.click();
+            };
+
+            // Map Initialization
+            const mapContainer = document.getElementById('projectMap');
+            if (mapContainer) {
+                try {
+                    const map = L.map('projectMap').setView([20, 0], 2);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map);
+                    const projects = [
+                        { name: 'Tech Innovate', location: [37.7749, -122.4194], details: 'AI-driven tech solutions' },
+                        { name: 'Green Energy Co', location: [52.5200, 13.4050], details: 'Renewable energy leader' }
+                    ];
+                    projects.forEach(p => {
+                        L.marker(p.location).addTo(map)
+                            .bindPopup(`<b>${p.name}</b><br>${p.details}`)
+                            .openPopup();
+                    });
+                    console.log('Map initialized');
+                } catch (e) {
+                    console.error('Failed to initialize map:', e);
+                }
+            } else {
+                console.error('Map container with ID projectMap not found');
+            }
+
+            // Live Metrics Simulation
+            function updateMetrics() {
+                const activeUsers = document.getElementById('activeUsers');
+                const totalInvestments = document.getElementById('totalInvestments');
+                const newProjects = document.getElementById('newProjects');
+                if (activeUsers && totalInvestments && newProjects) {
+                    activeUsers.textContent = (parseInt(activeUsers.textContent.replace(',', '')) + Math.floor(Math.random() * 10)).toLocaleString();
+                    totalInvestments.textContent = `$${(parseFloat(totalInvestments.textContent.replace('$', '').replace('M', '')) + 0.1).toFixed(1)}M`;
+                    newProjects.textContent = parseInt(newProjects.textContent) + Math.floor(Math.random() * 2);
+                }
+            }
+            setInterval(updateMetrics, 5000); // Simulate WebSocket updates every 5s
+            // Placeholder for WebSocket connection to /api/stats
+
+            window.login = function() {
+                alert("Redirecting to login page...");
+                // Placeholder for login logic (e.g., /api/auth/login)
+            };
+
+            // Trigger fade-in animations
+            document.querySelectorAll('.fade-in').forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareBridge - Projects</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-X2a4iQX66NS9L7l8z2jUlzFAF7eJOz9fI2R7hT2q7iXM2f8fJ0QjE3dZ6Y3F9k3G" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js" integrity="sha384-HLM4aF7yud4g8axgT3qUDMg3VO8HiN2O4vK9zD/7eC+9v3F+R7i4N7z2fI2R7hT2" crossorigin="anonymous"></script>
+    <style>
+        .project-card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .project-card:hover { transform: translateY(-5px); }
+        .chart-container { height: 200px; }
+        table { font-size: 0.9rem; }
+        .forecast-card { background-color: #f8f9fa; border-radius: 8px; padding: 15px; }
+        .forecast-card h4 { color: #007bff; }
+        .filter-bar { background-color: #e9ecef; padding: 15px; border-radius: 8px; }
+        .badge-img { width: 50px; height: 50px; }
+        .investor-badge { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="home.html"><img src="https://via.placeholder.com/40" alt="ShareBridge Logo"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="home.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="projects.html">Projects</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="subscription.html">Subscription</a></li>
+                    <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+                    <li class="nav-item"><a class="nav-link" href="community.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+                <button class="btn btn-outline-light" onclick="login()">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h2 class="text-center mb-4">Projects & Shareholders</h2>
+        <div class="filter-bar mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search projects by name...">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <select id="statusFilter" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Stable">Stable</option>
+                        <option value="High Growth">High Growth</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="projectList">
+            <div class="col-md-6 mb-4 project-card" data-status="Active">
+                <div class="p-4">
+                    <h3 class="font-bold">Tech Innovate</h3>
+                    <p><strong>Share Value:</strong> $150.25 <span class="text-success">+1.2%</span></p>
+                    <p><strong>Status:</strong> Active</p>
+                    <p><strong>Bio:</strong> Leading innovator in AI and cloud computing solutions.</p>
+                    <p><strong>Growth Potential:</strong> High (AI-driven insights)</p>
+                    <p><strong>Compliance:</strong> <img src="https://via.placeholder.com/50?text=SEC" alt="SEC Compliance" class="badge-img" title="SEC Compliant"></p>
+                    <p><strong>Investor Badge:</strong> <span class="investor-badge">Top Investor</span></p>
+                    <div class="chart-container">
+                        <canvas id="chart-tech-innovate"></canvas>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Financials</h4>
+                    <table class="table table-striped">
+                        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                        <tbody>
+                            <tr><td>Revenue</td><td>$5,000,000</td></tr>
+                            <tr><td>Profit</td><td>$1,200,000</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="mt-3 font-semibold">AI-Predicted Share Value</h4>
+                    <div class="forecast-card">
+                        <p><strong>30-Day Forecast:</strong> $155.50 (Confidence: 85%)</p>
+                        <p><strong>6-Month Forecast:</strong> $165.75 (Confidence: 78%)</p>
+                        <div class="chart-container">
+                            <canvas id="forecast-chart-tech-innovate"></canvas>
+                        </div>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Recent News</h4>
+                    <ul class="list-disc pl-5">
+                        <li>New product launch announced</li>
+                        <li>Q2 earnings exceed expectations</li>
+                    </ul>
+                    <div class="mt-3">
+                        <button class="btn btn-primary me-2" onclick="invest('Tech Innovate')">Invest Now</button>
+                        <a href="project-details.html?id=1" class="btn btn-outline-primary me-2">Details</a>
+                        <button class="btn btn-outline-info" onclick="subscribeAlerts('Tech Innovate')">Enable Alerts</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4 project-card" data-status="Stable">
+                <div class="p-4">
+                    <h3 class="font-bold">Green Energy Co</h3>
+                    <p><strong>Share Value:</strong> $85.50 <span class="text-danger">-0.8%</span></p>
+                    <p><strong>Status:</strong> Stable</p>
+                    <p><strong>Bio:</strong> Sustainable energy solutions for a greener future.</p>
+                    <p><strong>Growth Potential:</strong> Moderate (AI-driven insights)</p>
+                    <p><strong>Compliance:</strong> <img src="https://via.placeholder.com/50?text=SEC" alt="SEC Compliance" class="badge-img" title="SEC Compliant"></p>
+                    <p><strong>Investor Badge:</strong> <span class="investor-badge">Green Pioneer</span></p>
+                    <div class="chart-container">
+                        <canvas id="chart-green-energy"></canvas>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Financials</h4>
+                    <table class="table table-striped">
+                        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                        <tbody>
+                            <tr><td>Revenue</td><td>$3,000,000</td></tr>
+                            <tr><td>Profit</td><td>$800,000</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="mt-3 font-semibold">AI-Predicted Share Value</h4>
+                    <div class="forecast-card">
+                        <p><strong>30-Day Forecast:</strong> $87.20 (Confidence: 82%)</p>
+                        <p><strong>6-Month Forecast:</strong> $90.10 (Confidence: 75%)</p>
+                        <div class="chart-container">
+                            <canvas id="forecast-chart-green-energy"></canvas>
+                        </div>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Recent News</h4>
+                    <ul class="list-disc pl-5">
+                        <li>Signed major contract with utility provider</li>
+                    </ul>
+                    <div class="mt-3">
+                        <button class="btn btn-primary me-2" onclick="invest('Green Energy Co')">Invest Now</button>
+                        <a href="project-details.html?id=2" class="btn btn-outline-primary me-2">Details</a>
+                        <button class="btn btn-outline-info" onclick="subscribeAlerts('Green Energy Co')">Enable Alerts</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4 project-card" data-status="High Growth">
+                <div class="p-4">
+                    <h3 class="font-bold">BioHealth Inc</h3>
+                    <p><strong>Share Value:</strong> $200.75 <span class="text-success">+2.5%</span></p>
+                    <p><strong>Status:</strong> High Growth</p>
+                    <p><strong>Bio:</strong> Pioneering biotech solutions for healthcare.</p>
+                    <p><strong>Growth Potential:</strong> Very High (AI-driven insights)</p>
+                    <p><strong>Compliance:</strong> <img src="https://via.placeholder.com/50?text=SEC" alt="SEC Compliance" class="badge-img" title="SEC Compliant"></p>
+                    <p><strong>Investor Badge:</strong> <span class="investor-badge">Bio Innovator</span></p>
+                    <div class="chart-container">
+                        <canvas id="chart-biohealth"></canvas>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Financials</h4>
+                    <table class="table table-striped">
+                        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                        <tbody>
+                            <tr><td>Revenue</td><td>$7,500,000</td></tr>
+                            <tr><td>Profit</td><td>$2,000,000</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="mt-3 font-semibold">AI-Predicted Share Value</h4>
+                    <div class="forecast-card">
+                        <p><strong>30-Day Forecast:</strong> $210.50 (Confidence: 88%)</p>
+                        <p><strong>6-Month Forecast:</strong> $230.25 (Confidence: 80%)</p>
+                        <div class="chart-container">
+                            <canvas id="forecast-chart-biohealth"></canvas>
+                        </div>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Recent News</h4>
+                    <ul class="list-disc pl-5">
+                        <li>FDA approval for new drug</li>
+                        <li>Partnership with global pharma</li>
+                    </ul>
+                    <div class="mt-3">
+                        <button class="btn btn-primary me-2" onclick="invest('BioHealth Inc')">Invest Now</button>
+                        <a href="project-details.html?id=3" class="btn btn-outline-primary me-2">Details</a>
+                        <button class="btn btn-outline-info" onclick="subscribeAlerts('BioHealth Inc')">Enable Alerts</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4 project-card" data-status="Active">
+                <div class="p-4">
+                    <h3 class="font-bold">Quantum Computing Ltd</h3>
+                    <p><strong>Share Value:</strong> $120.30 <span class="text-success">+1.8%</span></p>
+                    <p><strong>Status:</strong> Active</p>
+                    <p><strong>Bio:</strong> Developing next-gen quantum computing technologies.</p>
+                    <p><strong>Growth Potential:</strong> High (AI-driven insights)</p>
+                    <p><strong>Compliance:</strong> <img src="https://via.placeholder.com/50?text=SEC" alt="SEC Compliance" class="badge-img" title="SEC Compliant"></p>
+                    <p><strong>Investor Badge:</strong> <span class="investor-badge">Quantum Leader</span></p>
+                    <div class="chart-container">
+                        <canvas id="chart-quantum-computing"></canvas>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Financials</h4>
+                    <table class="table table-striped">
+                        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                        <tbody>
+                            <tr><td>Revenue</td><td>$4,000,000</td></tr>
+                            <tr><td>Profit</td><td>$900,000</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 class="mt-3 font-semibold">AI-Predicted Share Value</h4>
+                    <div class="forecast-card">
+                        <p><strong>30-Day Forecast:</strong> $125.10 (Confidence: 84%)</p>
+                        <p><strong>6-Month Forecast:</strong> $135.50 (Confidence: 77%)</p>
+                        <div class="chart-container">
+                            <canvas id="forecast-chart-quantum-computing"></canvas>
+                        </div>
+                    </div>
+                    <h4 class="mt-3 font-semibold">Recent News</h4>
+                    <ul class="list-disc pl-5">
+                        <li>Breakthrough in quantum algorithms</li>
+                    </ul>
+                    <div class="mt-3">
+                        <button class="btn btn-primary me-2" onclick="invest('Quantum Computing Ltd')">Invest Now</button>
+                        <a href="project-details.html?id=4" class="btn btn-outline-primary me-2">Details</a>
+                        <button class="btn btn-outline-info" onclick="subscribeAlerts('Quantum Computing Ltd')">Enable Alerts</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <p>&copy; 2025 ShareBridge. All rights reserved.</p>
+        <a href="contact.html" class="text-white">Contact Us</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g"></script>    
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+        // Register Chart.js Zoom Plugin
+        Chart.register(ChartZoom);
+
+        // Initialize charts after DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const charts = [
+                {
+                    id: 'chart-tech-innovate',
+                    data: {
+                        labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                        datasets: [{ label: 'Share Value', data: [140, 145, 150, 148, 150.25], borderColor: 'blue', fill: false }]
+                    }
+                },
+                {
+                    id: 'chart-green-energy',
+                    data: {
+                        labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                        datasets: [{ label: 'Share Value', data: [80, 82, 84, 85, 85.50], borderColor: 'green', fill: false }]
+                    }
+                },
+                {
+                    id: 'chart-biohealth',
+                    data: {
+                        labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                        datasets: [{ label: 'Share Value', data: [190, 195, 198, 200, 200.75], borderColor: 'purple', fill: false }]
+                    }
+                },
+                {
+                    id: 'chart-quantum-computing',
+                    data: {
+                        labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                        datasets: [{ label: 'Share Value', data: [110, 115, 118, 120, 120.30], borderColor: 'orange', fill: false }]
+                    }
+                },
+                {
+                    id: 'forecast-chart-tech-innovate',
+                    data: {
+                        labels: ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                        datasets: [{ label: 'Predicted Value', data: [150.25, 152, 154, 155.50], borderColor: '#007bff', borderDash: [5, 5], fill: false }]
+                    }
+                },
+                {
+                    id: 'forecast-chart-green-energy',
+                    data: {
+                        labels: ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                        datasets: [{ label: 'Predicted Value', data: [85.50, 86, 86.8, 87.20], borderColor: '#28a745', borderDash: [5, 5], fill: false }]
+                    }
+                },
+                {
+                    id: 'forecast-chart-biohealth',
+                    data: {
+                        labels: ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                        datasets: [{ label: 'Predicted Value', data: [200.75, 205, 208, 210.50], borderColor: '#6f42c1', borderDash: [5, 5], fill: false }]
+                    }
+                },
+                {
+                    id: 'forecast-chart-quantum-computing',
+                    data: {
+                        labels: ['Today', 'Day 10', 'Day 20', 'Day 30'],
+                        datasets: [{ label: 'Predicted Value', data: [120.30, 122, 124, 125.10], borderColor: '#fd7e14', borderDash: [5, 5], fill: false }]
+                    }
+                }
+            ];
+
+            charts.forEach(chart => {
+                try {
+                    const canvas = document.getElementById(chart.id);
+                    if (!canvas) {
+                        console.error(`Canvas with ID ${chart.id} not found`);
+                        return;
+                    }
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        console.error(`Failed to get 2D context for canvas ${chart.id}`);
+                        return;
+                    }
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: chart.data,
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' } } } }
+                    });
+                    console.log(`Chart initialized for ${chart.id}`);
+                } catch (error) {
+                    console.error(`Error initializing chart ${chart.id}:`, error);
+                }
+            });
+        });
+
+        // Filter and Search Functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('searchInput').addEventListener('input', filterProjects);
+            document.getElementById('statusFilter').addEventListener('change', filterProjects);
+        });
+
+        function filterProjects() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const projectCards = document.querySelectorAll('.project-card');
+
+            projectCards.forEach(card => {
+                const projectName = card.querySelector('h3').textContent.toLowerCase();
+                const projectStatus = card.getAttribute('data-status');
+                const matchesSearch = projectName.includes(searchTerm);
+                const matchesStatus = !statusFilter || projectStatus === statusFilter;
+                card.style.display = matchesSearch && matchesStatus ? 'block' : 'none';
+            });
+        }
+
+        function invest(project) {
+            alert(`Redirecting to investment page for ${project}`);
+            // Placeholder for investment logic
+        }
+        function subscribeAlerts(project) {
+            alert(`Subscribed to real-time alerts for ${project}`);
+            // Placeholder for WebSocket/email alert subscription
+        }
+        function login() {
+            alert("Redirecting to login page...");
+            // Placeholder for login logic
+        }
+    </script>
+</body>
+</html>

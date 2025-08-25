@@ -1,0 +1,166 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareBridge - Subscription</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .plan-card { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .plan-card:hover { transform: translateY(-5px); }
+        .plan-card .btn-primary { width: 100%; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="home.html"><img src="https://via.placeholder.com/40" alt="ShareBridge Logo"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="home.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="subscription.html">Subscription</a></li>
+                    <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+                    <li class="nav-item"><a class="nav-link" href="community.html">Community</a></ итогам
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+                <button class="btn btn-outline-light" onclick="login()">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h2 class="text-center mb-4">Choose Your Subscription Plan</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="plan-card p-4 text-center">
+                    <h3 class="font-bold">Basic</h3>
+                    <p class="text-2xl font-bold">$0/month</p>
+                    <ul className="list-disc text-left pl-5">
+                        <li>Access to project listings</li>
+                        <li>Basic charts and news</li>
+                    </ul>
+                    <button class="btn btn-primary mt-3" onclick="subscribe('Basic')">Select</button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="plan-card p-4 text-center">
+                    <h3 class="font-bold">VIP</h3>
+                    <p class="text-2xl font-bold">$19.99/month</p>
+                    <ul className="list-disc text-left pl-5">
+                        <li>Advanced analytics</li>
+                        <li>Priority support</li>
+                        <li>Exclusive news updates</li>
+                    </ul>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#paymentModal" onclick="setPlan('VIP')">Select</button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="plan-card p-4 text-center">
+                    <h3 class="font-bold">Platinum</h3>
+                    <p class="text-2xl font-bold">$49.99/month</p>
+                    <ul className="list-disc text-left pl-5">
+                        <li>Real-time data feeds</li>
+                        <li>Custom portfolio tools</li>
+                        <li>VIP community access</li>
+                    </ul>
+                    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#paymentModal" onclick="setPlan('Platinum')">Select</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="planName">Selected Plan: </p>
+                    <input type="text" class="form-control mb-3" id="cardNumber" placeholder="Card Number">
+                    <input type="text" class="form-control mb-3" id="cardExpiry" placeholder="MM/YY">
+                    <input type="text" class="form-control mb-3" id="cardCVC" placeholder="CVC">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="processPayment()">Pay Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <p>&copy; 2025 ShareBridge. All rights reserved.</p>
+        <a href="contact.html" class="text-white">Contact Us</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedPlan = '';
+        function setPlan(plan) {
+            selectedPlan = plan;
+            document.getElementById('planName').textContent = `Selected Plan: ${plan}`;
+        }
+        function subscribe(plan) {
+            if (plan === 'Basic') {
+                alert('Basic plan selected. No payment required.');
+            } else {
+                alert(`Please select ${plan} plan via payment modal.`);
+            }
+        }
+        function processPayment() {
+            const cardNumber = document.getElementById('cardNumber').value;
+            alert(`Processing payment for ${selectedPlan} with card ${cardNumber}`);
+            // Placeholder for payment gateway (e.g., Stripe)
+        }
+        function login() {
+            alert("Redirecting to login page...");
+            // Placeholder for login logic
+        }
+    </script>
+</body>
+</html>
